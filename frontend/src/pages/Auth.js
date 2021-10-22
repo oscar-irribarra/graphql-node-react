@@ -1,14 +1,17 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import './Auth.css';
 
+import { useAuth } from '../context/auth-context';
+
 export const Auth = () => {
+    const [, setAuth] = useAuth();
+
     const [emailAddress, setEmailAddress] = useState('');
     const [password, setPassword] = useState('');
+    const formIsInvalid =
+        password.trim().length === 0 || emailAddress.trim().length === 0;
 
     const [isLogin, setIsLogin] = useState(true);
-
-    const isInvalid =
-        password.trim().length === 0 || emailAddress.trim().length === 0;
 
     const switchModehandler = () => {
         setIsLogin((prevState) => !prevState);
@@ -22,6 +25,7 @@ export const Auth = () => {
                 query{
                     login(email: "${emailAddress}" password: "${password}"){
                         token
+                        userId
                     }
                 }
             
@@ -52,13 +56,20 @@ export const Auth = () => {
                 console.error('Failed!');
             }
 
-            const data = await response.json();
+            const { data } = await response.json();
+            if (data.login.token) {
+                setAuth({ token: data.login.token, userId: data.login.userId });
+            }
             console.log(data);
         } catch (err) {
             // throw new Error(err);
             console.error(err);
         }
     };
+
+    useEffect(() => {
+        document.title = isLogin ? 'Log In' : 'Sign Up';
+    }, [isLogin]);
 
     return (
         <form onSubmit={submitHandler} method="POST" className="auth-form">
@@ -68,6 +79,7 @@ export const Auth = () => {
                     type="email"
                     id="email"
                     value={emailAddress}
+                    autoComplete="current-username"
                     onChange={({ target }) => {
                         setEmailAddress(target.value);
                     }}
@@ -79,13 +91,14 @@ export const Auth = () => {
                     type="password"
                     id="password"
                     value={password}
+                    autoComplete="current-password"
                     onChange={({ target }) => {
                         setPassword(target.value);
                     }}
                 />
             </div>
             <div className="form-actions">
-                <button disabled={isInvalid} type="submit">
+                <button disabled={formIsInvalid} type="submit">
                     {isLogin ? 'Log In' : 'Sign Up'}
                 </button>
                 <button type="button" onClick={switchModehandler}>
