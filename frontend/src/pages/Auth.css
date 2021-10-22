@@ -37,3 +37,8 @@
 .form-actions button:disabled {
     background-color: rgb(99, 99, 99);
 }
+
+p {
+    color: red;
+    text-align: center;
+}

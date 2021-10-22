@@ -6,7 +6,9 @@ import { useAuth } from '../../context/auth-context';
 import './MainNavigation.css';
 
 export const MainNavigation = () => {
-    const [auth] = useAuth();
+    const { auth, logOut } = useAuth();
+
+    console.log(auth);
 
     return (
         <header className="main-navigation">
@@ -15,18 +17,29 @@ export const MainNavigation = () => {
             </div>
             <nav className="main-navigation__items">
                 <ul>
-                    {!auth.token && (
+                    {!auth && (
                         <li>
                             <NavLink to="/auth">Login</NavLink>
                         </li>
                     )}
-                    <li>
-                        <NavLink to="/events">Events</NavLink>
-                    </li>
-                    {auth.token && (
-                        <li>
-                            <NavLink to="/bookings">Bookings</NavLink>
-                        </li>
+                    {auth && (
+                        <>
+                            <li>
+                                <NavLink to="/events">Events</NavLink>
+                            </li>
+                            <li>
+                                <NavLink to="/bookings">Bookings</NavLink>
+                            </li>
+                            <li>
+                                <button
+                                    type="button"
+                                    title="Sign Out"
+                                    onClick={logOut}
+                                >
+                                    LogOut
+                                </button>
+                            </li>
+                        </>
                     )}
                 </ul>
             </nav>

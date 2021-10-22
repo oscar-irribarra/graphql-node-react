@@ -1,29 +1,48 @@
 import './App.css';
 
+import { lazy, Suspense } from 'react';
 import { BrowserRouter, Route, Redirect, Switch } from 'react-router-dom';
-import { Auth } from './pages/Auth';
-import { Events } from './pages/Events';
-import { Booking } from './pages/Booking';
 import { MainNavigation } from './components/navigation/MainNavigation';
 
+import * as ROUTES from './constants/routes';
 import { useAuth } from './context/auth-context';
 
+const Auth = lazy(() => import('./pages/Auth'));
+const Events = lazy(() => import('./pages/Events'));
+const Booking = lazy(() => import('./pages/Booking'));
+
 function App() {
-    const [auth] = useAuth();
+    const { auth } = useAuth();
+
     return (
         <BrowserRouter>
             <MainNavigation />
             <main className="main-content">
-                <Switch>
-                    {!auth.token && <Redirect from="/" to="/auth" exact />}
-                    {auth.token && <Redirect from="/" to="/events" exact />}
-                    {auth.token && <Redirect from="/auth" to="/events" exact />}
-                    {!auth.token && <Route path="/auth" component={Auth} />}
-                    <Route path="/events" component={Events} />
-                    {auth.token && (
-                        <Route path="/bookings" component={Booking} />
-                    )}
-                </Switch>
+                <Suspense fallback={<p>Loading ...</p>}>
+                    <Switch>
+                        {!auth && (
+                            <>
+                                <Redirect to="/" />
+                                <Redirect from="/" to={ROUTES.AUTH} exact />
+                                <Route path={ROUTES.AUTH} component={Auth} />
+                            </>
+                        )}
+                        {auth && (
+                            <>
+                                <Redirect to={ROUTES.EVENTS} />
+
+                                <Route
+                                    path={ROUTES.EVENTS}
+                                    component={Events}
+                                />
+                                <Route
+                                    path={ROUTES.BOOKINGS}
+                                    component={Booking}
+                                />
+                            </>
+                        )}
+                    </Switch>
+                </Suspense>
             </main>
         </BrowserRouter>
     );

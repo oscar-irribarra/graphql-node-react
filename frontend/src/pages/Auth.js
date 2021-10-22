@@ -2,12 +2,17 @@ import React, { useEffect, useState } from 'react';
 import './Auth.css';
 
 import { useAuth } from '../context/auth-context';
+import { useHistory } from 'react-router-dom';
 
-export const Auth = () => {
-    const [, setAuth] = useAuth();
+import * as ROUTES from '../constants/routes';
+
+const Auth = () => {
+    const { logIn } = useAuth();
+    const history = useHistory();
 
     const [emailAddress, setEmailAddress] = useState('');
     const [password, setPassword] = useState('');
+    const [error, setError] = useState('');
     const formIsInvalid =
         password.trim().length === 0 || emailAddress.trim().length === 0;
 
@@ -52,17 +57,19 @@ export const Auth = () => {
                 }
             });
 
+            const { data, errors } = await response.json();
+
             if (response.status !== 200 && response.status !== 201) {
-                console.error('Failed!');
+                setError(errors[0]?.message);
+                throw new Error(errors[0]?.message);
             }
 
-            const { data } = await response.json();
             if (data.login.token) {
-                setAuth({ token: data.login.token, userId: data.login.userId });
+                logIn(data.login.token, data.login.userId);
+                history.replace(ROUTES.EVENTS);
             }
-            console.log(data);
         } catch (err) {
-            // throw new Error(err);
+            setError(err);
             console.error(err);
         }
     };
@@ -72,39 +79,44 @@ export const Auth = () => {
     }, [isLogin]);
 
     return (
-        <form onSubmit={submitHandler} method="POST" className="auth-form">
-            <div className="form-control">
-                <label htmlFor="email">Email</label>
-                <input
-                    type="email"
-                    id="email"
-                    value={emailAddress}
-                    autoComplete="current-username"
-                    onChange={({ target }) => {
-                        setEmailAddress(target.value);
-                    }}
-                />
-            </div>
-            <div className="form-control">
-                <label htmlFor="password">Password</label>
-                <input
-                    type="password"
-                    id="password"
-                    value={password}
-                    autoComplete="current-password"
-                    onChange={({ target }) => {
-                        setPassword(target.value);
-                    }}
-                />
-            </div>
-            <div className="form-actions">
-                <button disabled={formIsInvalid} type="submit">
-                    {isLogin ? 'Log In' : 'Sign Up'}
-                </button>
-                <button type="button" onClick={switchModehandler}>
-                    Go to {!isLogin ? 'Log In' : 'Sign Up'}
-                </button>
-            </div>
-        </form>
+        <>
+            <form onSubmit={submitHandler} method="POST" className="auth-form">
+                <div className="form-control">
+                    <label htmlFor="email">Email</label>
+                    <input
+                        type="email"
+                        id="email"
+                        value={emailAddress}
+                        autoComplete="current-username"
+                        onChange={({ target }) => {
+                            setEmailAddress(target.value);
+                        }}
+                    />
+                </div>
+                <div className="form-control">
+                    <label htmlFor="password">Password</label>
+                    <input
+                        type="password"
+                        id="password"
+                        value={password}
+                        autoComplete="current-password"
+                        onChange={({ target }) => {
+                            setPassword(target.value);
+                        }}
+                    />
+                </div>
+                <div className="form-actions">
+                    <button disabled={formIsInvalid} type="submit">
+                        {isLogin ? 'Log In' : 'Sign Up'}
+                    </button>
+                    <button type="button" onClick={switchModehandler}>
+                        Go to {!isLogin ? 'Log In' : 'Sign Up'}
+                    </button>
+                </div>
+            </form>
+            {error && <p>{error}</p>}
+        </>
     );
 };
+
+export default Auth;
