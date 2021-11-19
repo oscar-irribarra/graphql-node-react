@@ -60,7 +60,6 @@ const Auth = () => {
             const { data, errors } = await response.json();
 
             if (response.status !== 200 && response.status !== 201) {
-                setError(errors[0]?.message);
                 throw new Error(errors[0]?.message);
             }
 
@@ -69,8 +68,7 @@ const Auth = () => {
                 history.replace(ROUTES.EVENTS);
             }
         } catch (err) {
-            setError(err);
-            console.error(err);
+            setError(err.message);
         }
     };
 
@@ -113,8 +111,8 @@ const Auth = () => {
                         Go to {!isLogin ? 'Log In' : 'Sign Up'}
                     </button>
                 </div>
+                {error && <p className="error-message">{error}</p>}
             </form>
-            {error && <p>{error}</p>}
         </>
     );
 };
